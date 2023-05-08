@@ -1,5 +1,5 @@
 
-EE-Alchemy is a Python-based Discord bot that provides users with real-time information on the stock market. Users can request information on trending stocks, stocks in a specific sector, or information on a specific stock. The bot also provides sector news, information on upcoming stock earning dates, and tutorials on trading tools and patterns.
+EE-Alchemy is a Python-based Discord bot that provides users with real-time information on the stock market. Users can request information on trending stocks, trending market news, trending sectors, Options Data and information on a specific stock. The bot also provides information on upcoming stock earning dates, and tutorials on trading tools and patterns.
 
 Getting Started
 
