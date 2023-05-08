@@ -141,3 +141,5 @@ alpaca-trade-api
 requests
 beautifulsoup4
 python-dotenv
+
+git config --global user.name SouCode
