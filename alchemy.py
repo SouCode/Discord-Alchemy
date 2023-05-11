@@ -162,6 +162,53 @@ async def options(ctx, symbol):
         await ctx.send("An error occurred while fetching the options data.")
 
 
+# MS Finance API ~ Stock News
+def get_stock_news(performance_id):
+    rapidapi_key = os.environ['RAPIDAPI_KEY']
+    url = "https://ms-finance.p.rapidapi.com/news/list"
+    querystring = {"performanceId": performance_id}
+    headers = {
+        "X-RapidAPI-Key": rapidapi_key,
+        "X-RapidAPI-Host": "ms-finance.p.rapidapi.com"
+    }
+    response = requests.get(url, headers=headers, params=querystring)
+
+    if response.status_code == 200:
+        data = json.loads(response.text)
+        return data
+    else:
+        print(f"Error fetching stock news: {response.status_code}")
+        return None
+
+
+@bot.command()
+async def stock_news(ctx, performance_id):
+    try:
+        news_data = get_stock_news(performance_id)
+        if news_data is None or len(news_data) == 0:
+            await ctx.send(f"Could not fetch stock news for {performance_id}.")
+            return
+
+        embed = discord.Embed(
+            title=f"Stock News for {performance_id}",
+            color=discord.Color.blue()
+        )
+
+        # Display only the first 5 news items for simplicity
+        for i, news in enumerate(news_data[:5]):
+            news_title = news['title']
+            news_published_date = news['publishedDate']
+            news_source = news['sourceName']
+            news_info = f"{news_title}\nSource: {news_source}\nPublished: {news_published_date}"
+            embed.add_field(name="News", value=news_info, inline=False)
+
+        await ctx.send(embed=embed)
+
+    except Exception as e:
+        print("Error:", e)
+        await ctx.send("An error occurred while fetching the stock news.")
+
+
 
 
 # Add a simple command to test your bot
