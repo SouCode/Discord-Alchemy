@@ -1,19 +1,14 @@
 import os
-import discord
-from discord import Embed
 from discord.ext import commands
-import alpaca_trade_api as tradeapi
-import traceback
-import requests
-from bs4 import BeautifulSoup
-import datetime
-from datetime import date
-import json
-import os
+import discord
 from dotenv import load_dotenv
 
-load_dotenv()
+from alpaca import api
+from yahoo import get_top_trending_stocks, get_stock_info
+from telescope import get_options_data
+from ms_finance import get_stock_news
 
+load_dotenv()
 
 # Set up the Discord bot
 intents = discord.Intents.default()
@@ -24,29 +19,28 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 
-# Set up the Alpaca API instance
-api_key = os.environ['ALPACA_API_KEY']
-secret_key = os.environ['ALPACA_SECRET_KEY']
-base_url = os.environ['ALPACA_BASE_URL']
-api = tradeapi.REST(api_key, secret_key, base_url, api_version='v2')
 
+@bot.command()
+async def help(ctx):
+    embed = discord.Embed(
+        title="Alchemy Bot Commands",
+        color=discord.Color.blue(),
+        description="Here are the available commands for the Alchemy Bot:"
+    )
 
-# YahooFinance ~ Trending Stocks 
-def get_top_trending_stocks():
-    rapidapi_key = os.environ['RAPIDAPI_KEY']
-    url = "https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/get-trending-tickers"
-    headers = {
-        "x-rapidapi-key": rapidapi_key,
-        "x-rapidapi-host": "apidojo-yahoo-finance-v1.p.rapidapi.com"
+    commands = {
+        '!top_trending': 'Shows the top 5 trending stocks.',
+        '!stock_info <symbol>': 'Fetches and displays information about the stock with the given symbol.',
+        '!options <symbol>': 'Fetches and displays options data for the stock with the given symbol.',
+        '!stock_news <performance_id>': 'Fetches and displays news for the stock with the given performance id.',
+        '!hello': 'A test command to ensure that the bot is working.'
     }
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        data = json.loads(response.text)
-        top_stocks = data['finance']['result'][0]['quotes'][:5]
-        return [stock['symbol'] for stock in top_stocks]
-    else:
-        print(f"Error fetching trending stocks: {response.status_code}")
-        return []
+
+    for command, description in commands.items():
+        embed.add_field(name=command, value=description, inline=False)
+
+    await ctx.send(embed=embed)
+
 
 
 @bot.command()
@@ -54,7 +48,7 @@ async def top_trending(ctx):
     stocks = get_top_trending_stocks()
     
     # Create an embed object
-    embed = Embed(
+    embed = discord.Embed(
         title="Top 5 Trending Stocks",
         color=discord.Color.blue()
     )
@@ -66,33 +60,6 @@ async def top_trending(ctx):
     # Send the embed message
     await ctx.send(embed=embed)
 
-
-
-# YahooFinance ~  Stocks Quotes 
-def get_stock_info(symbol):
-    rapidapi_key = os.environ['RAPIDAPI_KEY']
-    url = f"https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary?symbol={symbol}&region=US"
-    headers = {
-        "x-rapidapi-key": rapidapi_key,
-        "x-rapidapi-host": "apidojo-yahoo-finance-v1.p.rapidapi.com"
-    }
-    response = requests.get(url, headers=headers)
-
-    if response.status_code == 200:
-        data = json.loads(response.text)
-        return {
-            "price": data["price"]["regularMarketPrice"]["raw"],
-            "market_cap": data["summaryDetail"]["marketCap"]["raw"],
-            "volume": data["summaryDetail"]["volume"]["raw"],
-            "day_high": data["summaryDetail"]["dayHigh"]["raw"],
-            "day_low": data["summaryDetail"]["dayLow"]["raw"],
-        }
-    else:
-        print(f"Error fetching stock information: {response.status_code}")
-        return None
-
-
-# Yahoo Finance ~ Bot commands for Quotes and Options Data
 @bot.command()
 async def stock_info(ctx, symbol):
     try:
@@ -117,27 +84,6 @@ async def stock_info(ctx, symbol):
         print("Error:", e)
         await ctx.send("An error occurred while fetching the stock information.")
 
-
-# Telescope API ~  Options Data
-def get_options_data(symbol):
-    rapidapi_key = os.environ['RAPIDAPI_KEY']
-    url = f"https://telescope-stocks-options-price-charts.p.rapidapi.com/options/{symbol}"
-    headers = {
-        "X-RapidAPI-Key": rapidapi_key,
-        "X-RapidAPI-Host": "telescope-stocks-options-price-charts.p.rapidapi.com"
-    }
-    response = requests.get(url, headers=headers)
-
-    if response.status_code == 200:
-        data = json.loads(response.text)
-        options_data = data["optionChain"]["result"][0]["options"][0]["calls"]
-        return options_data
-    else:
-        print(f"Error fetching options data: {response.status_code}")
-        return None
-
-
-
 @bot.command()
 async def options(ctx, symbol):
     try:
@@ -160,26 +106,6 @@ async def options(ctx, symbol):
     except Exception as e:
         print("Error:", e)
         await ctx.send("An error occurred while fetching the options data.")
-
-
-# MS Finance API ~ Stock News
-def get_stock_news(performance_id):
-    rapidapi_key = os.environ['RAPIDAPI_KEY']
-    url = "https://ms-finance.p.rapidapi.com/news/list"
-    querystring = {"performanceId": performance_id}
-    headers = {
-        "X-RapidAPI-Key": rapidapi_key,
-        "X-RapidAPI-Host": "ms-finance.p.rapidapi.com"
-    }
-    response = requests.get(url, headers=headers, params=querystring)
-
-    if response.status_code == 200:
-        data = json.loads(response.text)
-        return data
-    else:
-        print(f"Error fetching stock news: {response.status_code}")
-        return None
-
 
 @bot.command()
 async def stock_news(ctx, performance_id):
@@ -208,18 +134,11 @@ async def stock_news(ctx, performance_id):
         print("Error:", e)
         await ctx.send("An error occurred while fetching the stock news.")
 
-
-
-
-# Add a simple command to test your bot
 @bot.command()
 async def hello(ctx):
     await ctx.send("Hello, I'm your stock trading bot!")
 
-
-
 # Run the bot
 if __name__ == "__main__":
-    discord_token = os.environ['DISCORD_TOKEN']
+    discord_token = os.getenv('DISCORD_TOKEN')
     bot.run(discord_token)
-
