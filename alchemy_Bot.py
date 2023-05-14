@@ -21,7 +21,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 
 @bot.command()
-async def help(ctx):
+async def commands(ctx):
     embed = discord.Embed(
         title="Alchemy Bot Commands",
         color=discord.Color.blue(),
@@ -40,7 +40,6 @@ async def help(ctx):
         embed.add_field(name=command, value=description, inline=False)
 
     await ctx.send(embed=embed)
-
 
 
 @bot.command()
