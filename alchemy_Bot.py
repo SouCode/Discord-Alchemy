@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from alpaca import api
 from yahoo import get_top_trending_stocks, get_stock_info
 from telescope import get_options_data
-from ms_finance import get_stock_news
+from NewsAPI import get_company_news
 
 load_dotenv()
 
@@ -32,7 +32,7 @@ async def commands(ctx):
         '!top_trending': 'Shows the top 5 trending stocks.',
         '!stock_info <symbol>': 'Fetches and displays information about the stock with the given symbol.',
         '!options <symbol>': 'Fetches and displays options data for the stock with the given symbol.',
-        '!stock_news <performance_id>': 'Fetches and displays news for the stock with the given performance id.',
+        '!company_news <company>': 'Fetches and displays news for the given company.',
         '!hello': 'A test command to ensure that the bot is working.'
     }
 
@@ -107,31 +107,29 @@ async def options(ctx, symbol):
         await ctx.send("An error occurred while fetching the options data.")
 
 @bot.command()
-async def stock_news(ctx, performance_id):
+async def company_news(ctx, company):
     try:
-        news_data = get_stock_news(performance_id)
-        if news_data is None or len(news_data) == 0:
-            await ctx.send(f"Could not fetch stock news for {performance_id}.")
+        news_data = get_company_news(company)
+        if news_data is None:
+            await ctx.send(f"Could not fetch news for {company}.")
             return
 
         embed = discord.Embed(
-            title=f"Stock News for {performance_id}",
+            title=f"Latest News for {company}",
             color=discord.Color.blue()
         )
 
-        # Display only the first 5 news items for simplicity
-        for i, news in enumerate(news_data[:5]):
+        for i, news in enumerate(news_data[:5]):  # Display only the first 5 news articles for simplicity
             news_title = news['title']
-            news_published_date = news['publishedDate']
-            news_source = news['sourceName']
-            news_info = f"{news_title}\nSource: {news_source}\nPublished: {news_published_date}"
-            embed.add_field(name="News", value=news_info, inline=False)
+            news_url = news['url']
+            news_info = f"[{news_title}]({news_url})"
+            embed.add_field(name=f"News {i+1}", value=news_info, inline=False)
 
         await ctx.send(embed=embed)
 
     except Exception as e:
         print("Error:", e)
-        await ctx.send("An error occurred while fetching the stock news.")
+        await ctx.send("An error occurred while fetching the company news.")
 
 @bot.command()
 async def hello(ctx):

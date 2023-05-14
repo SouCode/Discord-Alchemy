@@ -21,3 +21,7 @@ def get_stock_news(performance_id):
     else:
         print(f"Error fetching stock news: {response.status_code}")
         return None
+
+if __name__ == "__main__":
+    # Code to run only when this script is the main program goes here
+    pass
