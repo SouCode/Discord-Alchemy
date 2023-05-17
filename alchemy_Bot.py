@@ -3,10 +3,11 @@ from discord.ext import commands
 import discord
 from dotenv import load_dotenv
 
-from alpaca import api
-from yahoo import get_top_trending_stocks, get_stock_info
-from telescope import get_options_data
-from NewsAPI import get_company_news
+from API.alpaca import api
+from API.yahoo import get_top_trending_stocks, get_stock_info
+from API.telescope import get_options_data
+from API.NewsAPI import get_company_news
+
 
 load_dotenv()
 
