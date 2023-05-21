@@ -8,6 +8,9 @@ from API.yahoo import get_top_trending_stocks, get_stock_info
 from API.telescope import get_options_data
 from API.NewsAPI import get_company_news
 
+from API.giphy import get_random_anime_gif
+
+
 
 load_dotenv()
 
@@ -131,6 +134,16 @@ async def company_news(ctx, company):
     except Exception as e:
         print("Error:", e)
         await ctx.send("An error occurred while fetching the company news.")
+
+
+@bot.command()
+async def anime_gif(ctx):
+    gif_url = get_random_anime_gif()
+    if gif_url is None:
+        await ctx.send("An error occurred while fetching the gif.")
+    else:
+        await ctx.send(gif_url)
+
 
 @bot.command()
 async def hello(ctx):
